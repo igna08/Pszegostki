@@ -78,18 +78,18 @@ function getImageUrl(imageUrl: string | null): string[] {
   return ['https://res.cloudinary.com/dv05qzzcm/image/upload/v1753105420/propiedades/placeholder.jpg'];
 }
 
-// Función para manejar las URLs de videos
-function getVideoUrl(videoUrl: string | null): string[] {
-  if (!videoUrl) {
-    return [];
-  }
+// Función para manejar las URLs de videos (mantenida por compatibilidad futura)
+// function getVideoUrl(videoUrl: string | null): string[] {
+//   if (!videoUrl) {
+//     return [];
+//   }
 
-  if (videoUrl.includes('cloudinary.com')) {
-    return videoUrl.split(',').map(url => url.trim()).filter(url => url.length > 0);
-  }
+//   if (videoUrl.includes('cloudinary.com')) {
+//     return videoUrl.split(',').map(url => url.trim()).filter(url => url.length > 0);
+//   }
 
-  return [];
-}
+//   return [];
+// }
 
 // -----------------------
 // PropertyModal - Modal expandido con toda la información
@@ -153,6 +153,7 @@ function PropertyModal({ property, onClose }: { property: Property; onClose: () 
 
         {/* Carrusel de imágenes */}
         <div className="relative h-96 bg-gray-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={currentIndex}
             src={images[currentIndex]}
@@ -288,6 +289,7 @@ function PropertyCard({
       className="cursor-pointer bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
     >
       <div className="relative h-48 w-full">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
           src={images[0]} 
           alt={property.location} 
