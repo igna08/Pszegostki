@@ -4,8 +4,8 @@ import React from 'react';
 // URL base para la API
 const API_BASE = 'https://pszegostki-linberassistant.onrender.com';
 
-// Placeholder para imágenes faltantes
-const PLACEHOLDER_IMAGE = 'https://via.placeholder.com/800x500/e5e7eb/9ca3af?text=Sin+Imagen';
+// Placeholder para imágenes faltantes - usando Cloudinary
+const PLACEHOLDER_IMAGE = 'https://res.cloudinary.com/dv05qzzcm/image/upload/v1753105420/propiedades/placeholder.jpg';
 
 // Interfaz de propiedad
 interface Property {
@@ -90,250 +90,244 @@ function processImageUrls(imagen_url: string | null): string[] {
   return [PLACEHOLDER_IMAGE];
 }
 
-// Modal de carrusel de imágenes
-interface ImageCarouselProps {
-  images: string[];
-  onClose: () => void;
-  initialIndex?: number;
-}
-
-function ImageCarouselModal({ images, onClose, initialIndex = 0 }: ImageCarouselProps) {
-  const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
-  const [isVisible, setIsVisible] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const goToPrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
-  React.useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowLeft') goToPrev();
-      if (e.key === 'ArrowRight') goToNext();
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
-
-  return (
-    <div 
-      className={`fixed inset-0 bg-black z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${isVisible ? 'bg-opacity-70' : 'bg-opacity-0'}`}
-      onClick={handleBackdropClick}
-    >
-      <button 
-        className="absolute top-4 right-4 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full p-2 text-white transition-all z-10"
-        onClick={onClose}
-        aria-label="Cerrar"
-      >
-        <Icons.X />
-      </button>
-      
-      <div className="relative w-full max-w-6xl h-full max-h-[85vh] flex items-center justify-center">
-        <div className="relative w-full h-full flex items-center justify-center">
-          <img
-            src={images[currentIndex]}
-            alt={`Imagen ${currentIndex + 1}`}
-            className="max-h-full max-w-full object-contain transition-opacity duration-300"
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              e.currentTarget.src = PLACEHOLDER_IMAGE;
-            }}
-          />
-        </div>
-        
-        {images.length > 1 && (
-          <>
-            <button 
-              onClick={goToPrev}
-              className="absolute left-2 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full p-3 text-white transition-all"
-              aria-label="Imagen anterior"
-            >
-              <Icons.ChevronLeft />
-            </button>
-            <button 
-              onClick={goToNext}
-              className="absolute right-2 bg-white bg-opacity-20 hover:bg-opacity-40 rounded-full p-3 text-white transition-all"
-              aria-label="Imagen siguiente"
-            >
-              <Icons.ChevronRight />
-            </button>
-            
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-              {images.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`w-2 h-2 rounded-full transition-all ${currentIndex === idx ? 'bg-white w-8' : 'bg-white bg-opacity-40'}`}
-                  aria-label={`Ir a imagen ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Tarjeta de propiedad
-interface PropertyCardProps {
+// Modal expandido de la propiedad
+interface PropertyModalProps {
   property: Property;
-  isExpanded: boolean;
-  onClick: (id: number) => void;
+  onClose: () => void;
 }
 
-function PropertyCard({ property, isExpanded, onClick }: PropertyCardProps) {
+function PropertyModal({ property, onClose }: PropertyModalProps) {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const images = processImageUrls(property.imagen_url);
   const PropertyIcon = property.tipo_juliano === 'casa' ? Icons.Home : Icons.Building;
-  const imageUrls = processImageUrls(property.imagen_url);
-  const mainImage = imageUrls[0];
   
-  const [showImageCarousel, setShowImageCarousel] = React.useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = React.useState(0);
-  const [imageScale, setImageScale] = React.useState(false);
-
   const formattedDate = new Date(property.created_at).toLocaleDateString('es-ES', {
     year: 'numeric', 
     month: 'long', 
     day: 'numeric'
   });
 
-  const propertyType = property.es_alquiler ? 'alquiler' : 'venta';
-  const whatsappMessage = `Hola, estoy interesado/a en la propiedad: ${property.tipo_juliano} en ${property.location} (ID: ${property.id}) para ${propertyType}. ¿Podría darme más información?`;
+  React.useEffect(() => {
+    setIsVisible(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const goToNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const goToPrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const whatsappMessage = `Hola, estoy interesado en la ${property.tipo_juliano} en ${property.location} para ${property.es_alquiler ? 'alquiler' : 'venta'}.`;
   const whatsappUrl = `https://web.whatsapp.com/send?phone=5493758457171&text=${encodeURIComponent(whatsappMessage)}`;
 
+  // Extraer URL de Instagram de la descripción
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urls = property.descripcion.match(urlRegex);
+  const instagramUrl = urls && urls.length > 0 ? urls[0] : null;
+
   return (
-    <>
-      <div
-        onClick={() => onClick(property.id)}
-        className="cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 w-full"
+    <div
+      className={`fixed inset-0 bg-black z-50 flex items-center justify-center p-4 transition-opacity duration-300 ${
+        isVisible ? 'bg-opacity-70' : 'bg-opacity-0'
+      }`}
+      onClick={onClose}
+    >
+      <div 
+        className={`bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all duration-300 ${
+          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+        }`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative h-56 w-full overflow-hidden">
+        {/* Botón cerrar */}
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 bg-gray-800 hover:bg-gray-900 rounded-full p-2 text-white transition-colors z-10"
+        >
+          <Icons.X />
+        </button>
+
+        {/* Carrusel de imágenes */}
+        <div className="relative h-96 bg-gray-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={mainImage}
-            alt={property.location}
-            className={`h-full w-full object-cover transition-transform duration-300 ${imageScale ? 'scale-110' : 'scale-100'}`}
-            onMouseEnter={() => setImageScale(true)}
-            onMouseLeave={() => setImageScale(false)}
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              e.currentTarget.src = PLACEHOLDER_IMAGE;
+            key={currentIndex}
+            src={images[currentIndex]}
+            alt={`Foto ${currentIndex + 1}`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
             }}
           />
-          <div className="absolute top-3 right-3 bg-white bg-opacity-90 px-3 py-1 rounded-full text-sm font-medium shadow">
+          
+          <span className="absolute top-4 left-4 bg-white bg-opacity-95 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
             {property.es_alquiler ? 'Alquiler' : 'Venta'}
-          </div>
-          {imageUrls.length > 1 && (
-            <div className="absolute top-3 left-3 bg-black bg-opacity-60 text-white px-2 py-1 rounded-full text-xs">
-              {imageUrls.length} fotos
-            </div>
+          </span>
+
+          {images.length > 1 && (
+            <>
+              <button 
+                onClick={goToPrev} 
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 text-gray-800 transition-all shadow-lg"
+              >
+                <Icons.ChevronLeft />
+              </button>
+              <button 
+                onClick={goToNext} 
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 text-gray-800 transition-all shadow-lg"
+              >
+                <Icons.ChevronRight />
+              </button>
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); setCurrentIndex(i); }}
+                    className={`h-2 rounded-full transition-all ${
+                      i === currentIndex ? 'bg-white w-8' : 'bg-white bg-opacity-50 w-2'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
-        <div className="p-4">
-          <div className="flex items-center mb-2">
-            <div className="mr-2 text-gray-600">
-              <PropertyIcon />
+        {/* Contenido */}
+        <div className="p-6 md:p-8">
+          {/* Título y ubicación */}
+          <div className="mb-4">
+            <div className="flex items-center mb-2">
+              <div className="mr-3 text-gray-700">
+                <PropertyIcon />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold capitalize text-gray-800">
+                {property.tipo_juliano.replace('_', ' ')}
+              </h2>
             </div>
-            <h3 className="text-lg font-semibold capitalize text-gray-800">
-              {property.tipo_juliano}
-            </h3>
-          </div>
-          
-          <div className="flex items-center text-gray-500 text-sm mb-2">
-            <div className="mr-1">
-              <Icons.MapPin />
+            <div className="flex items-center text-gray-600 text-base">
+              <div className="mr-2">
+                <Icons.MapPin />
+              </div>
+              <span>{property.location}</span>
             </div>
-            <span className="truncate">{property.location}</span>
           </div>
 
-          {isExpanded && (
-            <div className="mt-3 text-gray-700 text-sm space-y-3 animate-fadeIn">
-              <p>{property.descripcion}</p>
-              
-              {imageUrls.length > 1 && (
-                <div className="mt-4">
-                  <p className="font-medium mb-2">Imágenes ({imageUrls.length})</p>
-                  <div className="flex overflow-x-auto gap-2 pb-2">
-                    {imageUrls.map((src, idx) => (
-                      <img
-                        key={idx}
-                        src={src}
-                        alt={`Foto ${idx + 1}`}
-                        className={`h-16 w-24 object-cover rounded cursor-pointer transition-all flex-shrink-0 hover:opacity-80 ${selectedImageIndex === idx ? 'ring-2 ring-blue-500' : ''}`}
-                        onClick={(e: React.MouseEvent) => {
-                          e.stopPropagation();
-                          setSelectedImageIndex(idx);
-                          setShowImageCarousel(true);
-                        }}
-                        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                          e.currentTarget.src = PLACEHOLDER_IMAGE;
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {property.video_url && (
-                <div className="mt-3 p-2 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600 mb-1">Video disponible</p>
-                  <a 
-                    href={property.video_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 text-sm hover:underline"
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  >
-                    Ver video de la propiedad
-                  </a>
-                </div>
-              )}
-              
-              <div className="flex items-center text-gray-500 text-xs mt-3">
-                <div className="mr-1">
-                  <Icons.Calendar />
-                </div>
-                Publicado: {formattedDate}
-              </div>
-              
-              <a 
-                href={whatsappUrl}
-                target="_blank"
+          {/* Descripción */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Descripción</h3>
+            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{property.descripcion}</p>
+          </div>
+
+          {/* Fecha de publicación */}
+          <div className="flex items-center text-gray-500 text-sm mb-6 pb-6 border-b">
+            <Icons.Calendar />
+            <span className="ml-2">Publicado el {formattedDate}</span>
+          </div>
+
+          {/* Botones de acción */}
+          <div className={`grid grid-cols-1 ${instagramUrl ? 'md:grid-cols-2' : ''} gap-4`}>
+            <a
+              href={whatsappUrl}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-xl transition-colors font-semibold shadow-md hover:shadow-lg"
+            >
+              <Icons.MessageCircle />
+              <span>Consultar por WhatsApp</span>
+            </a>
+            
+            {instagramUrl && (
+              <a
+                href={instagramUrl}
+                target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-green-500 text-white py-2 rounded-lg mt-3 hover:bg-green-600 transition-colors"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                }}
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 text-white py-3 px-6 rounded-xl transition-all font-semibold shadow-md hover:shadow-lg"
               >
-                <Icons.MessageCircle />
-                Consultar por WhatsApp
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                <span>Ver recorrido de la casa</span>
               </a>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-      
-      {showImageCarousel && (
-        <ImageCarouselModal 
-          images={imageUrls} 
-          initialIndex={selectedImageIndex}
-          onClose={() => setShowImageCarousel(false)} 
+    </div>
+  );
+}
+
+// Tarjeta de propiedad simplificada
+interface PropertyCardProps {
+  property: Property;
+  onClick: (property: Property) => void;
+}
+
+function PropertyCard({ property, onClick }: PropertyCardProps) {
+  const PropertyIcon = property.tipo_juliano === 'casa' ? Icons.Home : Icons.Building;
+  const imageUrls = processImageUrls(property.imagen_url);
+  const mainImage = imageUrls[0];
+  const [imageScale, setImageScale] = React.useState(false);
+
+  return (
+    <div
+      onClick={() => onClick(property)}
+      className="cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 hover:scale-[1.02]"
+    >
+      <div className="relative h-56 w-full overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={mainImage}
+          alt={property.location}
+          className={`h-full w-full object-cover transition-transform duration-300 ${imageScale ? 'scale-110' : 'scale-100'}`}
+          onMouseEnter={() => setImageScale(true)}
+          onMouseLeave={() => setImageScale(false)}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGE;
+          }}
         />
-      )}
-    </>
+        <div className="absolute top-3 right-3 bg-white bg-opacity-90 px-3 py-1 rounded-full text-sm font-medium shadow">
+          {property.es_alquiler ? 'Alquiler' : 'Venta'}
+        </div>
+        {imageUrls.length > 1 && (
+          <div className="absolute top-3 left-3 bg-gray-800 bg-opacity-90 text-white px-2 py-1 rounded-full text-xs font-medium">
+            📷 {imageUrls.length} fotos
+          </div>
+        )}
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-center mb-2">
+          <div className="mr-2 text-gray-600">
+            <PropertyIcon />
+          </div>
+          <h3 className="text-lg font-semibold capitalize text-gray-800">
+            {property.tipo_juliano.replace('_', ' ')}
+          </h3>
+        </div>
+        
+        <div className="flex items-center text-gray-500 text-sm mb-2">
+          <div className="mr-1">
+            <Icons.MapPin />
+          </div>
+          <span className="truncate">{property.location}</span>
+        </div>
+
+        <p className="text-gray-600 text-sm line-clamp-2">{property.descripcion}</p>
+        
+        <div className="mt-3 text-sm text-gray-500 font-medium">
+          Click para ver más detalles →
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -342,12 +336,11 @@ export default function PropertyCarousel() {
   const [properties, setProperties] = React.useState<Property[]>([]);
   const [filterType, setFilterType] = React.useState('all');
   const [currentPage, setCurrentPage] = React.useState(0);
-  const [expandedId, setExpandedId] = React.useState<number | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [itemsPerPage, setItemsPerPage] = React.useState(4);
+  const [selectedProperty, setSelectedProperty] = React.useState<Property | null>(null);
   
-  const carouselRef = React.useRef<HTMLDivElement>(null);
   const touchStartX = React.useRef<number>(0);
 
   // Calcular items por página según el ancho
@@ -517,26 +510,17 @@ export default function PropertyCarousel() {
       </div>
 
       <div 
-        ref={carouselRef}
         className="relative px-6"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         <div className="overflow-hidden">
-          <div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 transition-all duration-500"
-            style={{ 
-              transform: `translateX(-${currentPage * 100}%)`,
-              gridAutoFlow: 'column',
-              gridTemplateColumns: `repeat(${filteredProperties.length}, minmax(0, 1fr))`
-            }}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {visibleProperties.map((property) => (
               <PropertyCard
                 key={property.id}
                 property={property}
-                isExpanded={expandedId === property.id}
-                onClick={(id) => setExpandedId(expandedId === id ? null : id)}
+                onClick={setSelectedProperty}
               />
             ))}
           </div>
@@ -579,19 +563,12 @@ export default function PropertyCarousel() {
         </div>
       )}
 
-      <style >{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-in-out;
-        }
-      `}</style>
+      {selectedProperty && (
+        <PropertyModal 
+          property={selectedProperty} 
+          onClose={() => setSelectedProperty(null)} 
+        />
+      )}
     </div>
   );
 }
