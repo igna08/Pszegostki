@@ -7,7 +7,6 @@ import Footer from "@/components/magicui/footer";
 import PropertyCarousel from "@/components/magicui/property";
 import WhatsappFloatingButton from "@/components/magicui/whatsapp";
 import TeamSection from "@/components/magicui/staff";
-import Logos from "@/components/magicui/sponsor";
 import RealEstateCTA from "@/components/magicui/call-action";
 
 export default function Page() {
@@ -26,7 +25,6 @@ export default function Page() {
       <main className="flex-1">
         {/* Sección Hero */}
         <HeroSection />
-        <Logos />
       <TeamSection />
         <PropertyCarousel />
 

@@ -4,8 +4,11 @@ import React from 'react';
 // URL base para la API
 const API_BASE = 'https://pszegostki-linberassistant.onrender.com';
 
-// Placeholder para imágenes faltantes - usando Cloudinary
-const PLACEHOLDER_IMAGE = 'https://res.cloudinary.com/dv05qzzcm/image/upload/v1753105420/propiedades/placeholder.jpg';
+// Tiempo de espera para el fetch (en milisegundos)
+const FETCH_TIMEOUT = 10000; // 10 segundos
+
+// Placeholder para imágenes faltantes - imagen genérica de casa
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop';
 
 // Interfaz de propiedad
 interface Property {
@@ -358,18 +361,30 @@ export default function PropertyCarousel() {
     return () => window.removeEventListener('resize', updateItemsPerPage);
   }, []);
 
-  // Fetch propiedades
+  // Fetch propiedades con timeout
   React.useEffect(() => {
     async function fetchProperties() {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(`${API_BASE}/property`);
+        const response = await fetch(`${API_BASE}/property`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
         if (!response.ok) throw new Error('Error al cargar propiedades');
         const data = await response.json();
         setProperties(data);
       } catch (err) {
-        setError('Error al cargar las propiedades. Inténtalo de nuevo más tarde.');
+        clearTimeout(timeoutId);
+        if (err instanceof Error && err.name === 'AbortError') {
+          setError('La solicitud tardó demasiado tiempo. Por favor, intenta de nuevo.');
+        } else {
+          setError('Error al cargar las propiedades. Inténtalo de nuevo más tarde.');
+        }
         console.error(err);
       } finally {
         setLoading(false);
