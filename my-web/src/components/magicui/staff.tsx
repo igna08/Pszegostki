@@ -139,8 +139,11 @@ export default function StaffDisplay() {
       { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
     );
 
+    // Copiar refs a una variable local
+    const currentRefs = staffRefs.current;
+
     // Observar cada ref de staff
-    staffRefs.current.forEach(ref => {
+    currentRefs.forEach(ref => {
       if (ref) observer.observe(ref);
     });
 
@@ -148,11 +151,11 @@ export default function StaffDisplay() {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
 
     return () => {
-      staffRefs.current.forEach(ref => {
+      currentRefs.forEach(ref => {
         if (ref) observer.unobserve(ref);
       });
       window.removeEventListener('scroll', handleScroll);
@@ -248,9 +251,10 @@ function StaffCard({ member, isActive, onClick }: StaffCardProps) {
         <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity ${
           isActive ? 'opacity-80' : 'opacity-60'
         }`} />
-        <img 
-          src={member.image} 
-          alt={member.name} 
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={member.image}
+          alt={member.name}
           className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
         />
         
@@ -317,9 +321,10 @@ function StaffDetailModal({ member, onClose }: StaffDetailModalProps) {
         <div className="relative">
           {/* Imagen de portada */}
           <div className="h-48 sm:h-64 bg-gray-200 relative">
-            <img 
-              src={member.image} 
-              alt={member.name} 
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={member.image}
+              alt={member.name}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
@@ -337,9 +342,10 @@ function StaffDetailModal({ member, onClose }: StaffDetailModalProps) {
           {/* Avatar */}
           <div className="absolute -bottom-16 left-8">
             <div className="rounded-full h-32 w-32 border-4 border-white overflow-hidden bg-gray-100">
-              <img 
-                src={member.image} 
-                alt={member.name} 
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={member.image}
+                alt={member.name}
                 className="w-full h-full object-cover"
               />
             </div>

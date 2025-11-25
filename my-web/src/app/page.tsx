@@ -1,6 +1,5 @@
 import React from 'react';
 import Navbar from "@/components/magicui/menu";
-import { TestimonialsMarquee } from "@/components/magicui/opinion";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import HeroSection from "@/components/magicui/hero";
 import Footer from "@/components/magicui/footer";
