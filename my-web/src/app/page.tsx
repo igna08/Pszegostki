@@ -8,6 +8,7 @@ import PropertyCarousel from "@/components/magicui/property";
 import WhatsappFloatingButton from "@/components/magicui/whatsapp";
 import TeamSection from "@/components/magicui/staff";
 import RealEstateCTA from "@/components/magicui/call-action";
+import Services from "@/components/magicui/services";
 
 export default function Page() {
   return (
@@ -25,14 +26,15 @@ export default function Page() {
       <main className="flex-1">
         {/* Sección Hero */}
         <HeroSection />
-      <TeamSection />
-        <PropertyCarousel />
+        <TeamSection />
 
         {/* Sección Servicios */}
+        <Services />
+
+        <PropertyCarousel />
 
         {/* Sección Opiniones */}
         <section className="mt-12">
-          <TestimonialsMarquee />
           <RealEstateCTA />
         </section>
       </main>

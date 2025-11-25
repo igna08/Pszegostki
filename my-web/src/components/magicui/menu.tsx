@@ -30,7 +30,14 @@ export default function Navbar() {
         .replace(/[^\w-]/g, "")
     )
     if (element) {
-      element.scrollIntoView({ behavior: "smooth" })
+      const navbarHeight = 80 // Altura aproximada del navbar
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - navbarHeight
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      })
       setMenuOpen(false)
     }
   }

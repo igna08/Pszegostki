@@ -477,7 +477,7 @@ export default function PropertyCarousel() {
   }
 
   return (
-    <div className="w-full py-8 bg-gray-100">
+    <div id="propiedades" className="w-full py-8 bg-gray-100">
       <div className="text-center mb-6 px-4">
         <h2 className="text-3xl font-bold text-gray-800 mb-2">Nuestras Propiedades Disponibles</h2>
         <p className="text-gray-600">Explore nuestra selección de propiedades exclusivas para venta y alquiler</p>

@@ -165,7 +165,7 @@ export default function StaffDisplay() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div id="sobre-nosotros" className="min-h-screen bg-white">
       {/* Encabezado */}
       <div className="bg-gray-900 text-white py-16 text-center">
         <h1 className="text-4xl font-bold mb-4">Nuestro Equipo</h1>
